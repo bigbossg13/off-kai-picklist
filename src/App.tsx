@@ -1,13 +1,20 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Header } from './components/Header';
 import { ImportPanel } from './components/ImportPanel';
 import { PicklistView } from './components/PicklistView';
+import { SavedPicklistsPanel } from './components/SavedPicklistsPanel';
 import { usePicklist } from './hooks/usePicklist';
+import { usePicklistStorage } from './hooks/usePicklistStorage';
+import type { SavedPicklist } from './types';
 
 export default function App() {
   const [year, setYear] = useState(2026);
   const [loading, setLoading] = useState(false);
-  const { teams, addTeams, removeTeam, toggleDrafted, reorderTeams, resetToEPARanking, clearAll } = usePicklist(year);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const { teams, setTeams, addTeams, removeTeam, toggleDrafted, reorderTeams, resetToEPARanking, clearAll } =
+    usePicklist(year);
+  const { saved, savePicklist, updatePicklist, deletePicklist } = usePicklistStorage();
 
   const handleImport = async (input: string) => {
     setLoading(true);
@@ -21,7 +28,29 @@ export default function App() {
   const handleYearChange = (newYear: number) => {
     setYear(newYear);
     clearAll();
+    setActiveId(null);
   };
+
+  const handleSave = useCallback((name: string) => {
+    const id = savePicklist(name, year, teams);
+    setActiveId(id);
+  }, [savePicklist, year, teams]);
+
+  const handleUpdate = useCallback((id: string) => {
+    const entry = saved.find(p => p.id === id);
+    updatePicklist(id, entry?.name ?? 'Untitled', year, teams);
+  }, [updatePicklist, saved, year, teams]);
+
+  const handleLoad = useCallback((picklist: SavedPicklist) => {
+    setYear(picklist.year);
+    setTeams(picklist.teams);
+    setActiveId(picklist.id);
+  }, [setTeams]);
+
+  const handleDelete = useCallback((id: string) => {
+    deletePicklist(id);
+    if (activeId === id) setActiveId(null);
+  }, [deletePicklist, activeId]);
 
   const loadedTeams = teams.filter(t => !t.loading && !t.error);
   const draftedCount = teams.filter(t => t.drafted).length;
@@ -35,7 +64,7 @@ export default function App() {
         <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
           {/* Sidebar */}
           <div style={{ width: '280px', flexShrink: 0 }}>
-            <div style={{ position: 'sticky', top: '80px' }}>
+            <div style={{ position: 'sticky', top: '80px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}>
               <ImportPanel onImport={handleImport} loading={loading} />
 
               {teams.length > 0 && (
@@ -102,6 +131,16 @@ export default function App() {
                   </div>
                 </div>
               )}
+
+              <SavedPicklistsPanel
+                saved={saved}
+                currentTeams={teams}
+                activeId={activeId}
+                onSave={handleSave}
+                onUpdate={handleUpdate}
+                onLoad={handleLoad}
+                onDelete={handleDelete}
+              />
             </div>
           </div>
 

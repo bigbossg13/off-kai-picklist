@@ -47,6 +47,14 @@ export interface StatboticsTeam {
   rookie_year: number | null;
 }
 
+export interface SavedPicklist {
+  id: string;
+  name: string;
+  year: number;
+  savedAt: number;
+  teams: PicklistTeam[];
+}
+
 export interface PicklistTeam {
   teamNumber: number;
   name: string;

@@ -127,7 +127,7 @@ export function usePicklist(year: number) {
     setTeams([]);
   }, []);
 
-  return { teams, addTeams, removeTeam, toggleDrafted, reorderTeams, resetToEPARanking, clearAll };
+  return { teams, setTeams, addTeams, removeTeam, toggleDrafted, reorderTeams, resetToEPARanking, clearAll };
 }
 
 function rerank(teams: PicklistTeam[]): PicklistTeam[] {
