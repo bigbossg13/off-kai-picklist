@@ -63,4 +63,5 @@ export interface PicklistTeam {
   error: string | null;
   rank: number;
   manualRank?: number;
+  drafted: boolean;
 }

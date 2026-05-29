@@ -38,6 +38,7 @@ export function usePicklist(year: number) {
       loading: true,
       error: null,
       rank: 0,
+      drafted: false,
     }));
 
     setTeams(prev => {
@@ -105,6 +106,12 @@ export function usePicklist(year: number) {
     setTeams(prev => rerank(prev.filter(t => t.teamNumber !== teamNumber)));
   }, []);
 
+  const toggleDrafted = useCallback((teamNumber: number) => {
+    setTeams(prev => prev.map(t =>
+      t.teamNumber === teamNumber ? { ...t, drafted: !t.drafted } : t
+    ));
+  }, []);
+
   const reorderTeams = useCallback((orderedTeams: PicklistTeam[]) => {
     setTeams(orderedTeams.map((t, i) => ({ ...t, rank: i + 1, manualRank: i + 1 })));
   }, []);
@@ -120,7 +127,7 @@ export function usePicklist(year: number) {
     setTeams([]);
   }, []);
 
-  return { teams, addTeams, removeTeam, reorderTeams, resetToEPARanking, clearAll };
+  return { teams, addTeams, removeTeam, toggleDrafted, reorderTeams, resetToEPARanking, clearAll };
 }
 
 function rerank(teams: PicklistTeam[]): PicklistTeam[] {

@@ -23,12 +23,13 @@ import type { PicklistTeam } from '../types';
 interface PicklistViewProps {
   teams: PicklistTeam[];
   onRemove: (teamNumber: number) => void;
+  onToggleDrafted: (teamNumber: number) => void;
   onReorder: (teams: PicklistTeam[]) => void;
   onResetRanking: () => void;
   onClearAll: () => void;
 }
 
-export function PicklistView({ teams, onRemove, onReorder, onResetRanking, onClearAll }: PicklistViewProps) {
+export function PicklistView({ teams, onRemove, onToggleDrafted, onReorder, onResetRanking, onClearAll }: PicklistViewProps) {
   const [search, setSearch] = useState('');
   const [selectedTeam, setSelectedTeam] = useState<PicklistTeam | null>(null);
 
@@ -185,7 +186,7 @@ export function PicklistView({ teams, onRemove, onReorder, onResetRanking, onCle
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={teams.map(t => t.teamNumber)}
+          items={teams.filter(t => !t.drafted).map(t => t.teamNumber)}
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-2">
@@ -194,6 +195,7 @@ export function PicklistView({ teams, onRemove, onReorder, onResetRanking, onCle
                 key={team.teamNumber}
                 team={team}
                 onRemove={onRemove}
+                onToggleDrafted={onToggleDrafted}
                 onClick={setSelectedTeam}
               />
             ))}

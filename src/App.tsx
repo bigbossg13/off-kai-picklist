@@ -5,9 +5,9 @@ import { PicklistView } from './components/PicklistView';
 import { usePicklist } from './hooks/usePicklist';
 
 export default function App() {
-  const [year, setYear] = useState(2025);
+  const [year, setYear] = useState(2026);
   const [loading, setLoading] = useState(false);
-  const { teams, addTeams, removeTeam, reorderTeams, resetToEPARanking, clearAll } = usePicklist(year);
+  const { teams, addTeams, removeTeam, toggleDrafted, reorderTeams, resetToEPARanking, clearAll } = usePicklist(year);
 
   const handleImport = async (input: string) => {
     setLoading(true);
@@ -24,6 +24,8 @@ export default function App() {
   };
 
   const loadedTeams = teams.filter(t => !t.loading && !t.error);
+  const draftedCount = teams.filter(t => t.drafted).length;
+  const availableCount = loadedTeams.filter(t => !t.drafted).length;
 
   return (
     <div style={{ minHeight: '100vh', background: '#0f0f23' }}>
@@ -46,7 +48,7 @@ export default function App() {
                     padding: '16px',
                   }}
                 >
-                  <h3 style={{ color: '#fff', fontSize: '14px', fontWeight: 600, marginBottom: '12px', margin: '0 0 12px' }}>
+                  <h3 style={{ color: '#fff', fontSize: '14px', fontWeight: 600, margin: '0 0 12px' }}>
                     Summary
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px', color: '#9ca3af' }}>
@@ -55,9 +57,15 @@ export default function App() {
                       <span style={{ color: '#fff', fontWeight: 500 }}>{teams.length}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Loaded</span>
-                      <span style={{ color: '#22c55e', fontWeight: 500 }}>{loadedTeams.length}</span>
+                      <span>Available</span>
+                      <span style={{ color: '#22c55e', fontWeight: 500 }}>{availableCount}</span>
                     </div>
+                    {draftedCount > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Picked</span>
+                        <span style={{ color: '#6b7280', fontWeight: 500 }}>{draftedCount}</span>
+                      </div>
+                    )}
                     {teams.some(t => t.loading) && (
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>Loading</span>
@@ -102,6 +110,7 @@ export default function App() {
             <PicklistView
               teams={teams}
               onRemove={removeTeam}
+              onToggleDrafted={toggleDrafted}
               onReorder={reorderTeams}
               onResetRanking={resetToEPARanking}
               onClearAll={clearAll}

@@ -7,7 +7,7 @@ interface HeaderProps {
 }
 
 export function Header({ teamCount, year, onYearChange }: HeaderProps) {
-  const years = [2025, 2024, 2023, 2022, 2020, 2019];
+  const years = [2026, 2025, 2024, 2023, 2022, 2020, 2019];
 
   return (
     <header
