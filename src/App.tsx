@@ -11,6 +11,7 @@ export default function App() {
   const [year, setYear] = useState(2026);
   const [loading, setLoading] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [doublePickMode, setDoublePickMode] = useState(false);
 
   const { teams, setTeams, addTeams, removeTeam, cyclePicked, reorderTeams, resetToEPARanking, clearAll } =
     usePicklist(year);
@@ -148,8 +149,10 @@ export default function App() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <PicklistView
               teams={teams}
+              doublePickMode={doublePickMode}
+              onDoublePickModeChange={setDoublePickMode}
               onRemove={removeTeam}
-              onCyclePicked={(num, dpMode) => cyclePicked(num, dpMode)}
+              onCyclePicked={(num) => cyclePicked(num, doublePickMode)}
               onReorder={reorderTeams}
               onResetRanking={resetToEPARanking}
               onClearAll={clearAll}

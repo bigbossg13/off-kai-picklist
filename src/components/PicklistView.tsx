@@ -23,17 +23,18 @@ import type { PicklistTeam } from '../types';
 
 interface PicklistViewProps {
   teams: PicklistTeam[];
+  doublePickMode: boolean;
+  onDoublePickModeChange: (v: boolean) => void;
   onRemove: (teamNumber: number) => void;
-  onCyclePicked: (teamNumber: number, doublePickMode: boolean) => void;
+  onCyclePicked: (teamNumber: number) => void;
   onReorder: (teams: PicklistTeam[]) => void;
   onResetRanking: () => void;
   onClearAll: () => void;
 }
 
-export function PicklistView({ teams, onRemove, onCyclePicked, onReorder, onResetRanking, onClearAll }: PicklistViewProps) {
+export function PicklistView({ teams, doublePickMode, onDoublePickModeChange, onRemove, onCyclePicked, onReorder, onResetRanking, onClearAll }: PicklistViewProps) {
   const [search, setSearch] = useState('');
   const [selectedTeam, setSelectedTeam] = useState<PicklistTeam | null>(null);
-  const [doublePickMode, setDoublePickMode] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -57,7 +58,7 @@ export function PicklistView({ teams, onRemove, onCyclePicked, onReorder, onRese
   };
 
   const handlePickFromBanner = (teamNumber: number) => {
-    onCyclePicked(teamNumber, doublePickMode);
+    onCyclePicked(teamNumber);
   };
 
   const exportCSV = () => {
@@ -136,7 +137,7 @@ export function PicklistView({ teams, onRemove, onCyclePicked, onReorder, onRese
 
         {/* Double-pick toggle */}
         <button
-          onClick={() => setDoublePickMode(m => !m)}
+          onClick={() => onDoublePickModeChange(!doublePickMode)}
           title="Allow teams to be picked twice"
           style={{
             background: doublePickMode ? 'rgba(245,158,11,0.15)' : '#1e1e35',
@@ -227,7 +228,7 @@ export function PicklistView({ teams, onRemove, onCyclePicked, onReorder, onRese
                 team={team}
                 doublePickMode={doublePickMode}
                 onRemove={onRemove}
-                onCyclePicked={(num) => onCyclePicked(num, doublePickMode)}
+                onCyclePicked={onCyclePicked}
                 onClick={setSelectedTeam}
               />
             ))}
