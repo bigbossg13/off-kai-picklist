@@ -15,23 +15,25 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import { Search, Download, RotateCcw, Trash2 } from 'lucide-react';
+import { Search, Download, RotateCcw, Trash2, Copy } from 'lucide-react';
 import { TeamCard } from './TeamCard';
 import { TeamDetailModal } from './TeamDetailModal';
+import { NextPickBanner } from './NextPickBanner';
 import type { PicklistTeam } from '../types';
 
 interface PicklistViewProps {
   teams: PicklistTeam[];
   onRemove: (teamNumber: number) => void;
-  onToggleDrafted: (teamNumber: number) => void;
+  onCyclePicked: (teamNumber: number, doublePickMode: boolean) => void;
   onReorder: (teams: PicklistTeam[]) => void;
   onResetRanking: () => void;
   onClearAll: () => void;
 }
 
-export function PicklistView({ teams, onRemove, onToggleDrafted, onReorder, onResetRanking, onClearAll }: PicklistViewProps) {
+export function PicklistView({ teams, onRemove, onCyclePicked, onReorder, onResetRanking, onClearAll }: PicklistViewProps) {
   const [search, setSearch] = useState('');
   const [selectedTeam, setSelectedTeam] = useState<PicklistTeam | null>(null);
+  const [doublePickMode, setDoublePickMode] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -54,15 +56,19 @@ export function PicklistView({ teams, onRemove, onToggleDrafted, onReorder, onRe
     onReorder(arrayMove(teams, oldIdx, newIdx));
   };
 
+  const handlePickFromBanner = (teamNumber: number) => {
+    onCyclePicked(teamNumber, doublePickMode);
+  };
+
   const exportCSV = () => {
     const rows = [
-      ['Rank', 'Team Number', 'Name', 'State', 'Total EPA', 'Auto EPA', 'Teleop EPA', 'Endgame EPA', 'Wins', 'Losses'],
+      ['Rank', 'Team Number', 'Name', 'State', 'Total EPA', 'Auto EPA', 'Teleop EPA', 'Endgame EPA', 'Wins', 'Losses', 'Picked'],
       ...teams
         .filter(t => !t.loading && !t.error)
         .map(t => [
           t.rank, t.teamNumber, t.name, t.state ?? '', t.epaTotal.toFixed(2),
           t.epaAuto.toFixed(2), t.epaTeleop.toFixed(2), t.epaEndgame.toFixed(2),
-          t.wins, t.losses,
+          t.wins, t.losses, t.pickedCount > 0 ? `${t.pickedCount}×` : '',
         ]),
     ];
     const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
@@ -98,6 +104,13 @@ export function PicklistView({ teams, onRemove, onToggleDrafted, onReorder, onRe
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Next pick banner */}
+      <NextPickBanner
+        teams={teams}
+        doublePickMode={doublePickMode}
+        onPick={handlePickFromBanner}
+      />
+
       {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex-1 min-w-48 relative">
@@ -120,6 +133,24 @@ export function PicklistView({ teams, onRemove, onToggleDrafted, onReorder, onRe
             className="py-2 pr-3 text-sm outline-none placeholder-gray-600 focus:border-purple-500"
           />
         </div>
+
+        {/* Double-pick toggle */}
+        <button
+          onClick={() => setDoublePickMode(m => !m)}
+          title="Allow teams to be picked twice"
+          style={{
+            background: doublePickMode ? 'rgba(245,158,11,0.15)' : '#1e1e35',
+            border: `1px solid ${doublePickMode ? 'rgba(245,158,11,0.5)' : '#252542'}`,
+            color: doublePickMode ? '#f59e0b' : '#9ca3af',
+            borderRadius: '10px',
+            cursor: 'pointer',
+          }}
+          className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors"
+        >
+          <Copy size={13} />
+          2× Picks {doublePickMode ? 'ON' : 'OFF'}
+        </button>
+
         <button
           onClick={onResetRanking}
           style={{
@@ -186,7 +217,7 @@ export function PicklistView({ teams, onRemove, onToggleDrafted, onReorder, onRe
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={teams.filter(t => !t.drafted).map(t => t.teamNumber)}
+          items={teams.filter(t => t.pickedCount === 0).map(t => t.teamNumber)}
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-2">
@@ -194,8 +225,9 @@ export function PicklistView({ teams, onRemove, onToggleDrafted, onReorder, onRe
               <TeamCard
                 key={team.teamNumber}
                 team={team}
+                doublePickMode={doublePickMode}
                 onRemove={onRemove}
-                onToggleDrafted={onToggleDrafted}
+                onCyclePicked={(num) => onCyclePicked(num, doublePickMode)}
                 onClick={setSelectedTeam}
               />
             ))}

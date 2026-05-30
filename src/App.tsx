@@ -12,7 +12,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const { teams, setTeams, addTeams, removeTeam, toggleDrafted, reorderTeams, resetToEPARanking, clearAll } =
+  const { teams, setTeams, addTeams, removeTeam, cyclePicked, reorderTeams, resetToEPARanking, clearAll } =
     usePicklist(year);
   const { saved, savePicklist, updatePicklist, deletePicklist } = usePicklistStorage();
 
@@ -53,8 +53,8 @@ export default function App() {
   }, [deletePicklist, activeId]);
 
   const loadedTeams = teams.filter(t => !t.loading && !t.error);
-  const draftedCount = teams.filter(t => t.drafted).length;
-  const availableCount = loadedTeams.filter(t => !t.drafted).length;
+  const draftedCount = teams.filter(t => t.pickedCount > 0).length;
+  const availableCount = loadedTeams.filter(t => t.pickedCount === 0).length;
 
   return (
     <div style={{ minHeight: '100vh', background: '#0f0f23' }}>
@@ -149,7 +149,7 @@ export default function App() {
             <PicklistView
               teams={teams}
               onRemove={removeTeam}
-              onToggleDrafted={toggleDrafted}
+              onCyclePicked={(num, dpMode) => cyclePicked(num, dpMode)}
               onReorder={reorderTeams}
               onResetRanking={resetToEPARanking}
               onClearAll={clearAll}

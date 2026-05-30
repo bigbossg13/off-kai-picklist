@@ -71,5 +71,5 @@ export interface PicklistTeam {
   error: string | null;
   rank: number;
   manualRank?: number;
-  drafted: boolean;
+  pickedCount: number; // 0 = available, 1 = picked, 2 = double-picked
 }
