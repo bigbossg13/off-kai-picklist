@@ -3,10 +3,21 @@ import type { SavedPicklist, PicklistTeam } from '../types';
 
 const STORAGE_KEY = 'off-kai-picklists';
 
+// Normalise teams loaded from localStorage — handles the old drafted:boolean
+// field that existed before pickedCount was introduced.
+function normaliseTeam(t: PicklistTeam & { drafted?: boolean }): PicklistTeam {
+  if (t.pickedCount === undefined) {
+    return { ...t, pickedCount: t.drafted ? 1 : 0 };
+  }
+  return t as PicklistTeam;
+}
+
 function load(): SavedPicklist[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const parsed: SavedPicklist[] = JSON.parse(raw);
+    return parsed.map(p => ({ ...p, teams: p.teams.map(normaliseTeam) }));
   } catch {
     return [];
   }

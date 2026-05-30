@@ -164,8 +164,23 @@ export function SavedPicklistsPanel({
                     <div style={{ color: p.id === activeId ? '#a78bfa' : '#e2e8f0', fontSize: '13px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {p.name}
                     </div>
-                    <div style={{ color: '#4b5563', fontSize: '11px', display: 'flex', gap: '6px', marginTop: '2px' }}>
-                      <span>{p.teams.filter(t => !t.loading && !t.error).length} teams</span>
+                    <div style={{ color: '#4b5563', fontSize: '11px', display: 'flex', gap: '6px', marginTop: '2px', flexWrap: 'wrap' }}>
+                      {(() => {
+                        const loaded = p.teams.filter(t => !t.loading && !t.error);
+                        const picked = loaded.filter(t => t.pickedCount > 0);
+                        const available = loaded.length - picked.length;
+                        return (
+                          <>
+                            <span style={{ color: '#22c55e' }}>{available} avail</span>
+                            {picked.length > 0 && (
+                              <>
+                                <span>·</span>
+                                <span style={{ color: '#6b7280' }}>{picked.length} picked</span>
+                              </>
+                            )}
+                          </>
+                        );
+                      })()}
                       <span>·</span>
                       <span>{p.year}</span>
                       <span>·</span>
