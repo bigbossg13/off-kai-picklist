@@ -65,25 +65,9 @@ export function PicklistView({ teams, doublePickMode, onDoublePickModeChange, on
 
   const copyForDiscord = () => {
     const available = teams.filter(t => !t.loading && !t.error && t.pickedCount === 0);
-    const picked = teams.filter(t => !t.loading && !t.error && t.pickedCount > 0);
+    const text = available.map(t => t.teamNumber).join(', ');
 
-    const fmtTeam = (t: PicklistTeam, idx: number) => {
-      const stat = t.epaTotal > 0
-        ? `EPA ${t.epaTotal.toFixed(1)}`
-        : t.opr !== undefined
-          ? `OPR ${t.opr.toFixed(1)}`
-          : '';
-      return `${idx + 1}. **#${t.teamNumber}** ${t.name}${stat ? ` — ${stat}` : ''}`;
-    };
-
-    const lines: string[] = ['**📋 FRC Picklist**', ''];
-    available.forEach((t, i) => lines.push(fmtTeam(t, i)));
-    if (picked.length > 0) {
-      lines.push('', '~~Picked~~');
-      picked.forEach(t => lines.push(`~~#${t.teamNumber} ${t.name}~~`));
-    }
-
-    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
