@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Key, Eye, EyeOff, ExternalLink } from 'lucide-react';
+import { Key, Eye, EyeOff } from 'lucide-react';
 
 interface ApiKeyPanelProps {
   apiKey: string;

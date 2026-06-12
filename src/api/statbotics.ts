@@ -1,4 +1,5 @@
 import type { StatboticsTeamYear, StatboticsTeam } from '../types';
+import { csvFetchTeamYear, csvFetchTeam } from './csvFallback';
 
 const BASE = 'https://api.statbotics.io/v3';
 
@@ -33,13 +34,29 @@ async function apiFetch(url: string, apiKey: string): Promise<Response> {
 }
 
 export async function fetchTeamYear(team: number, year: number, apiKey: string): Promise<StatboticsTeamYear> {
-  const res = await apiFetch(`${BASE}/team_year/${team}/${year}`, apiKey);
-  if (res.status === 404) throw new Error(`Team ${team} not found for ${year}`);
-  return res.json();
+  try {
+    const res = await apiFetch(`${BASE}/team_year/${team}/${year}`, apiKey);
+    if (res.status === 404) throw new Error(`Team ${team} not found for ${year}`);
+    return res.json();
+  } catch (err) {
+    const msg = (err as Error).message ?? '';
+    if (msg.includes('401') || msg.includes('403') || msg.includes('Auth error')) {
+      return csvFetchTeamYear(team, year);
+    }
+    throw err;
+  }
 }
 
 export async function fetchTeam(team: number, apiKey: string): Promise<StatboticsTeam> {
-  const res = await apiFetch(`${BASE}/team/${team}`, apiKey);
-  if (res.status === 404) throw new Error(`Team ${team} not found`);
-  return res.json();
+  try {
+    const res = await apiFetch(`${BASE}/team/${team}`, apiKey);
+    if (res.status === 404) throw new Error(`Team ${team} not found`);
+    return res.json();
+  } catch (err) {
+    const msg = (err as Error).message ?? '';
+    if (msg.includes('401') || msg.includes('403') || msg.includes('Auth error')) {
+      return csvFetchTeam(team);
+    }
+    throw err;
+  }
 }
