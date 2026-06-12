@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import type { PicklistTeam } from '../types';
 import { fetchTeamYear, fetchTeam } from '../api/statbotics';
 
-export function usePicklist(year: number) {
+export function usePicklist(year: number, apiKey: string) {
   const [teams, setTeams] = useState<PicklistTeam[]>([]);
 
   const parseTeamNumbers = (input: string): number[] => {
@@ -50,8 +50,8 @@ export function usePicklist(year: number) {
       newNums.map(async (num) => {
         try {
           const [ty, team] = await Promise.allSettled([
-            fetchTeamYear(num, year),
-            fetchTeam(num),
+            fetchTeamYear(num, year, apiKey),
+            fetchTeam(num, apiKey),
           ]);
 
           const tyData = ty.status === 'fulfilled' ? ty.value : null;

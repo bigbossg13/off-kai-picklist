@@ -3,18 +3,27 @@ import { Header } from './components/Header';
 import { ImportPanel } from './components/ImportPanel';
 import { PicklistView } from './components/PicklistView';
 import { SavedPicklistsPanel } from './components/SavedPicklistsPanel';
+import { ApiKeyPanel } from './components/ApiKeyPanel';
 import { usePicklist } from './hooks/usePicklist';
 import { usePicklistStorage } from './hooks/usePicklistStorage';
 import type { SavedPicklist } from './types';
+
+const API_KEY_STORAGE = 'off-kai-statbotics-key';
 
 export default function App() {
   const [year, setYear] = useState(2026);
   const [loading, setLoading] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [doublePickMode, setDoublePickMode] = useState(false);
+  const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem(API_KEY_STORAGE) ?? '');
+
+  const handleApiKeyChange = (key: string) => {
+    setApiKey(key);
+    localStorage.setItem(API_KEY_STORAGE, key);
+  };
 
   const { teams, setTeams, addTeams, removeTeam, cyclePicked, reorderTeams, resetToEPARanking, clearAll } =
-    usePicklist(year);
+    usePicklist(year, apiKey);
   const { saved, savePicklist, updatePicklist, deletePicklist } = usePicklistStorage();
 
   const handleImport = async (input: string) => {
@@ -67,6 +76,8 @@ export default function App() {
           <div style={{ width: '280px', flexShrink: 0 }}>
             <div style={{ position: 'sticky', top: '80px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}>
               <ImportPanel onImport={handleImport} loading={loading} />
+
+              <ApiKeyPanel apiKey={apiKey} onChange={handleApiKeyChange} />
 
               {teams.length > 0 && (
                 <div
