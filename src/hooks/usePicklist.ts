@@ -57,13 +57,12 @@ export function usePicklist(year: number, apiKey: string, tbaKey: string) {
 
           const tyData = ty.status === 'fulfilled' ? ty.value : null;
           const teamData = team.status === 'fulfilled' ? team.value : null;
-          const hasEPA = !!tyData && (tyData.epa?.total_points?.mean ?? 0) > 0;
-
-          // Fetch OPR from TBA if EPA is missing or zero
+          // Always fetch OPR + DPR from TBA when a key is available
           let opr: number | undefined;
-          if (!hasEPA && tbaKey) {
+          let dpr: number | undefined;
+          if (tbaKey) {
             const oprResult = await fetchTeamOPR(num, year, tbaKey).catch(() => null);
-            if (oprResult) opr = oprResult.opr;
+            if (oprResult) { opr = oprResult.opr; dpr = oprResult.dpr; }
           }
 
           setTeams(prev => {
@@ -78,6 +77,7 @@ export function usePicklist(year: number, apiKey: string, tbaKey: string) {
                   state: teamData?.state ?? null,
                   country: teamData?.country ?? null,
                   opr,
+                  dpr,
                 };
               }
               return {
@@ -95,6 +95,7 @@ export function usePicklist(year: number, apiKey: string, tbaKey: string) {
                 state: tyData.state ?? teamData?.state ?? null,
                 country: tyData.country ?? teamData?.country ?? null,
                 opr,
+                dpr,
               };
             });
             return rerank(updated);

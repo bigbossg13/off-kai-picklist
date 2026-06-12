@@ -29,6 +29,7 @@ interface TBAOprs {
 
 export interface TBATeamOPR {
   opr: number;
+  dpr: number;
   eventKey: string;
 }
 
@@ -59,7 +60,11 @@ export async function fetchTeamOPR(
     if (oprsRes.status === 404) continue;
     const data: TBAOprs = await oprsRes.json();
     if (data?.oprs?.[teamKey] !== undefined) {
-      return { opr: data.oprs[teamKey], eventKey: event.key };
+      return {
+        opr: data.oprs[teamKey],
+        dpr: data.dprs?.[teamKey] ?? 0,
+        eventKey: event.key,
+      };
     }
   }
   return null;
