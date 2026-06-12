@@ -65,7 +65,7 @@ export function PicklistView({ teams, doublePickMode, onDoublePickModeChange, on
 
   const copyForDiscord = () => {
     const available = teams.filter(t => !t.loading && !t.error && t.pickedCount === 0);
-    const text = available.map(t => t.teamNumber).join(', ');
+    const text = available.map(t => t.teamNumber).join('\n');
 
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
