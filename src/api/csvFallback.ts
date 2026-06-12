@@ -68,8 +68,14 @@ export async function csvFetchTeamYear(
   year: number,
 ): Promise<StatboticsTeamYear> {
   const rows = await getTeamYears();
-  const row = rows.find(r => Number(r.team) === team && Number(r.year) === year);
-  if (!row) throw new Error(`Team ${team} not found for ${year}`);
+  // Try the requested year, then fall back to the most recent year available for this team
+  const teamRows = rows.filter(r => Number(r.team) === team);
+  if (teamRows.length === 0) throw new Error(`Team ${team} not found`);
+  let row = teamRows.find(r => Number(r.year) === year);
+  if (!row) {
+    // Use the most recent year available
+    row = teamRows.sort((a, b) => Number(b.year) - Number(a.year))[0];
+  }
 
   // Column names are our best-guess mapping from the DB schema.
   // epa_mean / epa_sd map to total_points; auto/teleop/endgame follow the same pattern.

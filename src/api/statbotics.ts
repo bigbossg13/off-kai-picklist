@@ -36,7 +36,7 @@ async function apiFetch(url: string, apiKey: string): Promise<Response> {
 export async function fetchTeamYear(team: number, year: number, apiKey: string): Promise<StatboticsTeamYear> {
   try {
     const res = await apiFetch(`${BASE}/team_year/${team}/${year}`, apiKey);
-    if (res.status === 404) throw new Error(`Team ${team} not found for ${year}`);
+    if (res.status === 404) return csvFetchTeamYear(team, year);
     return res.json();
   } catch (err) {
     const msg = (err as Error).message ?? '';
