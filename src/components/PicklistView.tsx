@@ -61,6 +61,34 @@ export function PicklistView({ teams, doublePickMode, onDoublePickModeChange, on
     onCyclePicked(teamNumber);
   };
 
+  const [copied, setCopied] = useState(false);
+
+  const copyForDiscord = () => {
+    const available = teams.filter(t => !t.loading && !t.error && t.pickedCount === 0);
+    const picked = teams.filter(t => !t.loading && !t.error && t.pickedCount > 0);
+
+    const fmtTeam = (t: PicklistTeam, idx: number) => {
+      const stat = t.epaTotal > 0
+        ? `EPA ${t.epaTotal.toFixed(1)}`
+        : t.opr !== undefined
+          ? `OPR ${t.opr.toFixed(1)}`
+          : '';
+      return `${idx + 1}. **#${t.teamNumber}** ${t.name}${stat ? ` — ${stat}` : ''}`;
+    };
+
+    const lines: string[] = ['**📋 FRC Picklist**', ''];
+    available.forEach((t, i) => lines.push(fmtTeam(t, i)));
+    if (picked.length > 0) {
+      lines.push('', '~~Picked~~');
+      picked.forEach(t => lines.push(`~~#${t.teamNumber} ${t.name}~~`));
+    }
+
+    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   const exportCSV = () => {
     const rows = [
       ['Rank', 'Team Number', 'Name', 'State', 'Total EPA', 'Auto EPA', 'Teleop EPA', 'Endgame EPA', 'Wins', 'Losses', 'Picked'],
@@ -179,6 +207,21 @@ export function PicklistView({ teams, doublePickMode, onDoublePickModeChange, on
         >
           <Download size={13} />
           Export CSV
+        </button>
+        <button
+          onClick={copyForDiscord}
+          style={{
+            background: copied ? 'rgba(88,101,242,0.2)' : '#1e1e35',
+            border: `1px solid ${copied ? 'rgba(88,101,242,0.6)' : '#252542'}`,
+            color: copied ? '#818cf8' : '#9ca3af',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+          className="flex items-center gap-1.5 px-3 py-2 text-xs hover:text-white hover:border-purple-500 transition-colors"
+        >
+          <Copy size={13} />
+          {copied ? 'Copied!' : 'Copy for Discord'}
         </button>
         <button
           onClick={onClearAll}
