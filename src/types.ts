@@ -72,4 +72,5 @@ export interface PicklistTeam {
   rank: number;
   manualRank?: number;
   pickedCount: number; // 0 = available, 1 = picked, 2 = double-picked
+  opr?: number;        // fallback from TBA when EPA is unavailable
 }

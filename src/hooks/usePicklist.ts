@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'react';
 import type { PicklistTeam } from '../types';
 import { fetchTeamYear, fetchTeam } from '../api/statbotics';
+import { fetchTeamOPR } from '../api/tba';
 
-export function usePicklist(year: number, apiKey: string) {
+export function usePicklist(year: number, apiKey: string, tbaKey: string) {
   const [teams, setTeams] = useState<PicklistTeam[]>([]);
 
   const parseTeamNumbers = (input: string): number[] => {
@@ -56,6 +57,14 @@ export function usePicklist(year: number, apiKey: string) {
 
           const tyData = ty.status === 'fulfilled' ? ty.value : null;
           const teamData = team.status === 'fulfilled' ? team.value : null;
+          const hasEPA = !!tyData && (tyData.epa?.total_points?.mean ?? 0) > 0;
+
+          // Fetch OPR from TBA if EPA is missing or zero
+          let opr: number | undefined;
+          if (!hasEPA && tbaKey) {
+            const oprResult = await fetchTeamOPR(num, year, tbaKey).catch(() => null);
+            if (oprResult) opr = oprResult.opr;
+          }
 
           setTeams(prev => {
             const updated = prev.map(t => {
@@ -64,10 +73,11 @@ export function usePicklist(year: number, apiKey: string) {
                 return {
                   ...t,
                   loading: false,
-                  error: ty.status === 'rejected' ? (ty.reason as Error).message : 'No data',
+                  error: opr !== undefined ? null : (ty.status === 'rejected' ? (ty.reason as Error).message : 'No data'),
                   name: teamData?.name ?? t.name,
                   state: teamData?.state ?? null,
                   country: teamData?.country ?? null,
+                  opr,
                 };
               }
               return {
@@ -84,6 +94,7 @@ export function usePicklist(year: number, apiKey: string) {
                 losses: tyData.record?.season?.losses ?? 0,
                 state: tyData.state ?? teamData?.state ?? null,
                 country: tyData.country ?? teamData?.country ?? null,
+                opr,
               };
             });
             return rerank(updated);
@@ -142,7 +153,9 @@ function rerank(teams: PicklistTeam[]): PicklistTeam[] {
     if (a.manualRank !== undefined && b.manualRank !== undefined) {
       return a.manualRank - b.manualRank;
     }
-    return b.epaTotal - a.epaTotal;
+    const scoreA = a.epaTotal > 0 ? a.epaTotal : (a.opr ?? 0);
+    const scoreB = b.epaTotal > 0 ? b.epaTotal : (b.opr ?? 0);
+    return scoreB - scoreA;
   });
 
   const all = [...sortedLoaded, ...loading, ...errored];

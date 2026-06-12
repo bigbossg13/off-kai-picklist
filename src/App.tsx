@@ -9,6 +9,9 @@ import { usePicklistStorage } from './hooks/usePicklistStorage';
 import type { SavedPicklist } from './types';
 
 const API_KEY_STORAGE = 'off-kai-statbotics-key';
+const TBA_KEY_STORAGE = 'off-kai-tba-key';
+// Key baked in at build time from the VITE_TBA_API_KEY secret
+const BUILT_IN_TBA_KEY = import.meta.env.VITE_TBA_API_KEY ?? '';
 
 export default function App() {
   const [year, setYear] = useState(2026);
@@ -16,14 +19,20 @@ export default function App() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [doublePickMode, setDoublePickMode] = useState(false);
   const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem(API_KEY_STORAGE) ?? '');
+  const [tbaKey, setTbaKey] = useState<string>(() => localStorage.getItem(TBA_KEY_STORAGE) ?? BUILT_IN_TBA_KEY);
 
   const handleApiKeyChange = (key: string) => {
     setApiKey(key);
     localStorage.setItem(API_KEY_STORAGE, key);
   };
 
+  const handleTbaKeyChange = (key: string) => {
+    setTbaKey(key);
+    localStorage.setItem(TBA_KEY_STORAGE, key);
+  };
+
   const { teams, setTeams, addTeams, removeTeam, cyclePicked, reorderTeams, resetToEPARanking, clearAll } =
-    usePicklist(year, apiKey);
+    usePicklist(year, apiKey, tbaKey);
   const { saved, savePicklist, updatePicklist, deletePicklist } = usePicklistStorage();
 
   const handleImport = async (input: string) => {
@@ -77,7 +86,13 @@ export default function App() {
             <div style={{ position: 'sticky', top: '80px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}>
               <ImportPanel onImport={handleImport} loading={loading} />
 
-              <ApiKeyPanel apiKey={apiKey} onChange={handleApiKeyChange} />
+              <ApiKeyPanel
+                apiKey={apiKey}
+                onChange={handleApiKeyChange}
+                tbaKey={tbaKey}
+                onTbaKeyChange={handleTbaKeyChange}
+                builtInTbaKey={!!BUILT_IN_TBA_KEY}
+              />
 
               {teams.length > 0 && (
                 <div

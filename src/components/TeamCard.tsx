@@ -153,10 +153,10 @@ export function TeamCard({ team, doublePickMode, onRemove, onCyclePicked, onClic
         )}
       </div>
 
-      {/* EPA display */}
+      {/* EPA / OPR display */}
       {!team.loading && !team.error && (
         <div className="flex items-center gap-4 flex-shrink-0">
-          {!isPicked && (
+          {!isPicked && team.epaTotal > 0 && (
             <div className="hidden sm:flex items-center gap-3 text-xs" style={{ color: '#6b7280' }}>
               <span title="Auto EPA">A: <span style={{ color: '#60a5fa' }}>{team.epaAuto.toFixed(1)}</span></span>
               <span title="Teleop EPA">T: <span style={{ color: '#a78bfa' }}>{team.epaTeleop.toFixed(1)}</span></span>
@@ -164,13 +164,32 @@ export function TeamCard({ team, doublePickMode, onRemove, onCyclePicked, onClic
             </div>
           )}
           <div className="text-right">
-            <div
-              className="text-lg font-bold"
-              style={{ color: isPicked ? '#374151' : epaColor(team.epaTotal) }}
-            >
-              {team.epaTotal.toFixed(1)}
-            </div>
-            <div style={{ color: '#4b5563' }} className="text-xs">EPA</div>
+            {team.epaTotal > 0 ? (
+              <>
+                <div
+                  className="text-lg font-bold"
+                  style={{ color: isPicked ? '#374151' : epaColor(team.epaTotal) }}
+                >
+                  {team.epaTotal.toFixed(1)}
+                </div>
+                <div style={{ color: '#4b5563' }} className="text-xs">EPA</div>
+              </>
+            ) : team.opr !== undefined ? (
+              <>
+                <div
+                  className="text-lg font-bold"
+                  style={{ color: isPicked ? '#374151' : '#f59e0b' }}
+                >
+                  {team.opr.toFixed(1)}
+                </div>
+                <div style={{ color: '#4b5563' }} className="text-xs">OPR</div>
+              </>
+            ) : (
+              <>
+                <div className="text-lg font-bold" style={{ color: '#374151' }}>—</div>
+                <div style={{ color: '#4b5563' }} className="text-xs">no data</div>
+              </>
+            )}
           </div>
           {!isPicked && (
             <ChevronRight
