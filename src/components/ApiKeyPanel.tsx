@@ -22,20 +22,18 @@ export function ApiKeyPanel({ apiKey, onChange }: ApiKeyPanelProps) {
     <div
       style={{
         background: '#16162a',
-        border: `1px solid ${apiKey ? '#252542' : 'rgba(239,68,68,0.4)'}`,
+        border: '1px solid #252542',
         borderRadius: '16px',
         padding: '14px 16px',
         marginTop: '16px',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-        <Key size={13} style={{ color: apiKey ? '#8b5cf6' : '#ef4444' }} />
+        <Key size={13} style={{ color: '#8b5cf6' }} />
         <span style={{ color: '#fff', fontSize: '13px', fontWeight: 600 }}>Statbotics API Key</span>
-        {!apiKey && (
-          <span style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontSize: '10px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px' }}>
-            REQUIRED
-          </span>
-        )}
+        <span style={{ background: '#1e1e35', color: '#6b7280', fontSize: '10px', padding: '1px 6px', borderRadius: '4px' }}>
+          optional
+        </span>
       </div>
 
       {editing ? (
@@ -88,15 +86,9 @@ export function ApiKeyPanel({ apiKey, onChange }: ApiKeyPanelProps) {
               Save
             </button>
           </div>
-          <a
-            href="https://www.statbotics.io/api/auth"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: '#6b7280', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}
-          >
-            <ExternalLink size={10} />
-            Get a free key at statbotics.io
-          </a>
+          <p style={{ color: '#4b5563', fontSize: '11px', margin: 0 }}>
+            Only needed if you get a 401/403 error. Leave blank to try without one first.
+          </p>
         </>
       ) : (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
