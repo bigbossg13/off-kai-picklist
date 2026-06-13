@@ -1,62 +1,28 @@
 import type { StatboticsTeamYear, StatboticsTeam } from '../types';
-import { csvFetchTeamYear, csvFetchTeam } from './csvFallback';
 
 const BASE = 'https://api.statbotics.io/v3';
 
-function buildHeaders(apiKey: string): HeadersInit {
-  // Only send the key header if one has been configured
-  return apiKey ? { 'X-API-Key': apiKey } : {};
-}
-
 async function apiFetch(url: string, apiKey: string): Promise<Response> {
   const res = await fetch(url, {
-    headers: buildHeaders(apiKey),
+    headers: apiKey ? { 'X-API-Key': apiKey } : {},
     mode: 'cors',
   });
   if (!res.ok) {
+    if (res.status === 404) return res;
     const body = await res.text().catch(() => '');
-    if (res.status === 401 || res.status === 403) {
-      // If no key is set this is likely a CORS/Cloudflare block.
-      // If a key is set, it may be invalid.
-      if (apiKey) {
-        throw new Error(`Auth error ${res.status} — check your API key`);
-      } else {
-        throw new Error(
-          `Error ${res.status} from Statbotics — the API may require a key. ` +
-          `Try adding one in the API Key panel. Details: ${body.slice(0, 80)}`
-        );
-      }
-    }
-    if (res.status === 404) return res; // let callers handle 404
-    throw new Error(`Statbotics API error ${res.status}`);
+    throw new Error(`Statbotics error ${res.status}${body ? `: ${body.slice(0, 80)}` : ''}`);
   }
   return res;
 }
 
-function shouldFallback(err: unknown): boolean {
-  const msg = (err as Error).message ?? '';
-  // Fall back on auth errors OR any network-level failure (CORS, offline, Cloudflare block)
-  return msg.includes('401') || msg.includes('403') || msg.includes('Auth error') || msg.includes('fetch');
-}
-
 export async function fetchTeamYear(team: number, year: number, apiKey: string): Promise<StatboticsTeamYear> {
-  try {
-    const res = await apiFetch(`${BASE}/team_year/${team}/${year}`, apiKey);
-    if (res.status === 404) return csvFetchTeamYear(team, year);
-    return res.json();
-  } catch (err) {
-    if (shouldFallback(err)) return csvFetchTeamYear(team, year);
-    throw err;
-  }
+  const res = await apiFetch(`${BASE}/team_year/${team}/${year}`, apiKey);
+  if (res.status === 404) throw new Error(`Team ${team} not found for ${year}`);
+  return res.json();
 }
 
 export async function fetchTeam(team: number, apiKey: string): Promise<StatboticsTeam> {
-  try {
-    const res = await apiFetch(`${BASE}/team/${team}`, apiKey);
-    if (res.status === 404) return csvFetchTeam(team);
-    return res.json();
-  } catch (err) {
-    if (shouldFallback(err)) return csvFetchTeam(team);
-    throw err;
-  }
+  const res = await apiFetch(`${BASE}/team/${team}`, apiKey);
+  if (res.status === 404) throw new Error(`Team ${team} not found`);
+  return res.json();
 }
