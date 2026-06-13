@@ -89,12 +89,16 @@ export async function csvFetchTeamYear(
     district: nullStr(row.district),
     is_competing: false,
     epa: {
-      total_points: { mean: n(row.epa),          sd: n(row.epa_sd) },
-      unitless:     { mean: 0, sd: 0 },
-      norm:         { mean: 0, sd: 0 },
-      auto:         { mean: n(row.auto_epa),      sd: n(row.auto_epa_sd) },
-      teleop:       { mean: n(row.teleop_epa),    sd: n(row.teleop_epa_sd) },
-      endgame:      { mean: n(row.endgame_epa),   sd: n(row.endgame_epa_sd) },
+      // total_points = sum of components; the bare `epa` column is unitless (~30s scale)
+      total_points: {
+        mean: n(row.auto_epa) + n(row.teleop_epa) + n(row.endgame_epa),
+        sd:   n(row.epa_sd),
+      },
+      unitless: { mean: n(row.epa),           sd: n(row.epa_sd) },
+      norm:     { mean: 0, sd: 0 },
+      auto:     { mean: n(row.auto_epa),       sd: n(row.auto_epa_sd) },
+      teleop:   { mean: n(row.teleop_epa),     sd: n(row.teleop_epa_sd) },
+      endgame:  { mean: n(row.endgame_epa),    sd: n(row.endgame_epa_sd) },
     },
     record: {
       season: {
