@@ -1,4 +1,5 @@
 import type { StatboticsTeamYear, StatboticsTeam } from '../types';
+import { csvFetchTeamYear, csvFetchTeam } from './csvFallback';
 
 const BASE = 'https://api.statbotics.io/v3';
 
@@ -16,13 +17,21 @@ async function apiFetch(url: string, apiKey: string): Promise<Response> {
 }
 
 export async function fetchTeamYear(team: number, year: number, apiKey: string): Promise<StatboticsTeamYear> {
-  const res = await apiFetch(`${BASE}/team_year/${team}/${year}`, apiKey);
-  if (res.status === 404) throw new Error(`Team ${team} not found for ${year}`);
-  return res.json();
+  try {
+    const res = await apiFetch(`${BASE}/team_year/${team}/${year}`, apiKey);
+    if (res.status === 404) return csvFetchTeamYear(team, year);
+    return res.json();
+  } catch {
+    return csvFetchTeamYear(team, year);
+  }
 }
 
 export async function fetchTeam(team: number, apiKey: string): Promise<StatboticsTeam> {
-  const res = await apiFetch(`${BASE}/team/${team}`, apiKey);
-  if (res.status === 404) throw new Error(`Team ${team} not found`);
-  return res.json();
+  try {
+    const res = await apiFetch(`${BASE}/team/${team}`, apiKey);
+    if (res.status === 404) return csvFetchTeam(team);
+    return res.json();
+  } catch {
+    return csvFetchTeam(team);
+  }
 }
