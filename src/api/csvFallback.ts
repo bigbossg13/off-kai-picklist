@@ -36,7 +36,13 @@ async function getTeamYears(): Promise<Row[]> {
         if (!r.ok) throw new Error(`CSV fetch failed: ${r.status}`);
         return r.text();
       })
-      .then(parseCSV);
+      .then(text => {
+        const rows = parseCSV(text);
+        if (rows.length > 0) {
+          console.log('[statbotics-csvs] team_years columns:', Object.keys(rows[0]).join(', '));
+        }
+        return rows;
+      });
   }
   return teamYearsPromise;
 }
@@ -56,6 +62,15 @@ async function getTeams(): Promise<Row[]> {
 function n(v: string | undefined): number {
   const x = parseFloat(v ?? '');
   return isNaN(x) ? 0 : x;
+}
+
+// Try multiple possible column name variants, return first non-zero hit
+function pick(row: Row, ...keys: string[]): number {
+  for (const k of keys) {
+    const v = n(row[k]);
+    if (v !== 0) return v;
+  }
+  return 0;
 }
 
 function nullStr(v: string | undefined): string | null {
@@ -88,12 +103,15 @@ export async function csvFetchTeamYear(
     district: nullStr(row.district),
     is_competing: false,
     epa: {
-      total_points: { mean: n(row.epa_mean), sd: n(row.epa_sd) },
+      total_points: {
+        mean: pick(row, 'epa_mean', 'total_epa_mean', 'epa_end', 'epa', 'norm_epa'),
+        sd:   pick(row, 'epa_sd',   'total_epa_sd'),
+      },
       unitless: { mean: 0, sd: 0 },
-      norm: { mean: 0, sd: 0 },
-      auto: { mean: n(row.auto_epa_mean), sd: 0 },
-      teleop: { mean: n(row.teleop_epa_mean), sd: 0 },
-      endgame: { mean: n(row.endgame_epa_mean), sd: 0 },
+      norm:     { mean: 0, sd: 0 },
+      auto:     { mean: pick(row, 'auto_epa_mean',    'auto_epa'),     sd: 0 },
+      teleop:   { mean: pick(row, 'teleop_epa_mean',  'teleop_epa'),   sd: 0 },
+      endgame:  { mean: pick(row, 'endgame_epa_mean', 'endgame_epa'),  sd: 0 },
     },
     record: {
       season: {
