@@ -33,16 +33,19 @@ async function apiFetch(url: string, apiKey: string): Promise<Response> {
   return res;
 }
 
+function shouldFallback(err: unknown): boolean {
+  const msg = (err as Error).message ?? '';
+  // Fall back on auth errors OR any network-level failure (CORS, offline, Cloudflare block)
+  return msg.includes('401') || msg.includes('403') || msg.includes('Auth error') || msg.includes('fetch');
+}
+
 export async function fetchTeamYear(team: number, year: number, apiKey: string): Promise<StatboticsTeamYear> {
   try {
     const res = await apiFetch(`${BASE}/team_year/${team}/${year}`, apiKey);
     if (res.status === 404) return csvFetchTeamYear(team, year);
     return res.json();
   } catch (err) {
-    const msg = (err as Error).message ?? '';
-    if (msg.includes('401') || msg.includes('403') || msg.includes('Auth error')) {
-      return csvFetchTeamYear(team, year);
-    }
+    if (shouldFallback(err)) return csvFetchTeamYear(team, year);
     throw err;
   }
 }
@@ -50,13 +53,10 @@ export async function fetchTeamYear(team: number, year: number, apiKey: string):
 export async function fetchTeam(team: number, apiKey: string): Promise<StatboticsTeam> {
   try {
     const res = await apiFetch(`${BASE}/team/${team}`, apiKey);
-    if (res.status === 404) throw new Error(`Team ${team} not found`);
+    if (res.status === 404) return csvFetchTeam(team);
     return res.json();
   } catch (err) {
-    const msg = (err as Error).message ?? '';
-    if (msg.includes('401') || msg.includes('403') || msg.includes('Auth error')) {
-      return csvFetchTeam(team);
-    }
+    if (shouldFallback(err)) return csvFetchTeam(team);
     throw err;
   }
 }
